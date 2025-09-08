@@ -5,10 +5,17 @@
 #include <stddef.h>
 #include "marchid.h"
 #include "util.h"
-#include "dataset.h"
+
 
 // EDIT THIS
-static size_t n_cores = 2;
+
+static size_t n_cores = 1;
+static size_t num = 25;
+
+struct fibfac {
+    int fib;
+    int fac;
+};
 
 static void __attribute__((noinline)) barrier_loop()
 {
@@ -30,35 +37,50 @@ static void __attribute__((noinline)) barrier_loop()
   __sync_synchronize();
 }
 
-#pragma GCC optimize ("unroll-loops")
-void matmul(const size_t coreid, const size_t ncores, const size_t lda,  const data_t A[], const data_t B[], data_t C[])
-{
-  size_t i, j, k;
-  size_t block = lda / ncores;
-  size_t start = block * coreid;
-  //printf("starting hart %lu\n", coreid);
- 
-  for (i = 0; i < lda; i++) {
-    for (j = start; j < (start+block); j++) {
-      data_t sum = 0;
-      for (k = 0; k < lda; k++)
-        sum += A[j*lda + k] * B[k*lda + i];
-        C[i + j*lda] = sum;
-    }
-  }
+int factorial(int n) {
+   //base case
+   if(n == 0) {
+      return 1;
+   } else {
+      return n * factorial(n-1);
+   }
 }
 
 
-void thread_entry(int cid, int nc)
+int fibbonacci(int n) {
+   if(n == 0){
+      return 0;
+   } else if(n == 1) {
+      return 1;
+   } else {
+      return (fibbonacci(n-1) + fibbonacci(n-2));
+   }
+}
+
+
+void thread_entry(int cid, int nc, int* fib, int* fac)
 {
-  static data_t results_data[ARRAY_SIZE];
-  
 
-  //stats(matmul(cid, nc, DIM_SIZE, input1_data, input2_data, results_data); barrier(nc), DIM_SIZE/DIM_SIZE/DIM_SIZE);
+  assert(fib);
+  assert(fac);
+
+  if(nc == 1){
+    *fib = fibbonacci(num);
+    *fac = factorial(num);
+  }
+  else{
+    if(cid == 0){
+      *fib = fibbonacci(num);
+      *fac = 0;
+    }
+    else{
+      *fib = 0;
+      *fac = factorial(num);
+    }
+  }
 
 
-  matmul(cid, nc, DIM_SIZE, input1_data, input2_data, results_data);
-  
+
 
    //exit(res);
 }
@@ -75,6 +97,8 @@ void __main(void) {
 
 
   const char* march = get_march(read_csr(marchid));
+  int fib;
+  int fac;
 
   for (size_t i = 0; i < n_cores; i++) {
     if (mhartid == i) {
@@ -85,7 +109,7 @@ void __main(void) {
 
   start_time = read_csr(mcycle);
   start_instr = read_csr(minstret);
-  thread_entry(cid, nc);
+  thread_entry(cid, nc, &fib, &fac);
   
   end_time = read_csr(mcycle);
   end_instr = read_csr(minstret);
@@ -99,6 +123,23 @@ void __main(void) {
     }
     barrier(nc);
   }
+
+  for (size_t i = 0; i < n_cores; i++) {
+  if(n_cores == 1){
+    printf("Fibonacci from %lu is %lu\n", num, fib);
+    printf("Factorial from %lu is %lu\n", num, fac);
+  }
+  else{
+    if(mhartid == 0){
+      printf("Fibonacci from %lu is %lu\n", num, fib);
+    }
+    else{
+      printf("Factorial from %lu is %lu\n", num, fac);
+    }
+  }
+    barrier(nc);
+  }
+
   
 
   // Spin if not core 0

@@ -5,10 +5,12 @@
 #include <stddef.h>
 #include "marchid.h"
 #include "util.h"
-#include "dataset.h"
+
 
 // EDIT THIS
-static size_t n_cores = 2;
+#define ARRAY_SIZE 4 
+static size_t n_cores = 1;
+static size_t num = 5;
 
 static void __attribute__((noinline)) barrier_loop()
 {
@@ -30,35 +32,27 @@ static void __attribute__((noinline)) barrier_loop()
   __sync_synchronize();
 }
 
-#pragma GCC optimize ("unroll-loops")
-void matmul(const size_t coreid, const size_t ncores, const size_t lda,  const data_t A[], const data_t B[], data_t C[])
-{
-  size_t i, j, k;
-  size_t block = lda / ncores;
-  size_t start = block * coreid;
-  //printf("starting hart %lu\n", coreid);
- 
-  for (i = 0; i < lda; i++) {
-    for (j = start; j < (start+block); j++) {
-      data_t sum = 0;
-      for (k = 0; k < lda; k++)
-        sum += A[j*lda + k] * B[k*lda + i];
-        C[i + j*lda] = sum;
-    }
-  }
+
+int fibbonacci(int n) {
+   if(n == 0){
+      return 0;
+   } else if(n == 1) {
+      return 1;
+   } else {
+      return (fibbonacci(n-1) + fibbonacci(n-2));
+   }
 }
 
 
 void thread_entry(int cid, int nc)
 {
-  static data_t results_data[ARRAY_SIZE];
-  
 
   //stats(matmul(cid, nc, DIM_SIZE, input1_data, input2_data, results_data); barrier(nc), DIM_SIZE/DIM_SIZE/DIM_SIZE);
-
-
-  matmul(cid, nc, DIM_SIZE, input1_data, input2_data, results_data);
-  
+  int result;
+  for(int i = cid; i < ARRAY_SIZE; i++){
+    result = fibbonacci(num);
+    printf("Fibonacci of %lu is %lu\n", num, result);
+  }
 
    //exit(res);
 }
