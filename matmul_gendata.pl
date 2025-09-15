@@ -31,7 +31,7 @@ sub usage()
   print "\n";
   print " Options:\n";
   print "  --help  print this message\n";
-  print "  --size  size of input data [100]\n";
+  print "  --size  size of input data [10]\n";
   print "  --seed  random seed [1]\n";
   print "$usageMsg";
 
@@ -42,7 +42,7 @@ sub processCommandLine()
 {
 
   $opts{"help"} = 0;
-  $opts{"size"} = 100;
+  $opts{"size"} = 10;
   $opts{"seed"} = 1;
   Getopt::Long::GetOptions( \%opts, 'help|?', 'size:i', 'seed:i' ) or usage();
   $opts{"help"} and usage();

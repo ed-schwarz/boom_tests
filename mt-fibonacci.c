@@ -10,27 +10,9 @@
 // EDIT THIS
 #define ARRAY_SIZE 4 
 static size_t n_cores = 1;
-static size_t num = 5;
+static size_t num = 25;
 
-static void __attribute__((noinline)) barrier_loop()
-{
-  static volatile int sense;
-  static volatile int count;
-  static __thread int threadsense;
 
-  __sync_synchronize();
-
-  threadsense = !threadsense;
-  if (__sync_fetch_and_add(&count, 1) == n_cores-1)
-  {
-    count = 0;
-    sense = threadsense;
-  }
-  else while(sense != threadsense)
-    ;
-
-  __sync_synchronize();
-}
 
 
 int fibbonacci(int n) {
@@ -51,7 +33,7 @@ void thread_entry(int cid, int nc)
   int result;
   for(int i = cid; i < ARRAY_SIZE; i++){
     result = fibbonacci(num);
-    printf("Fibonacci of %lu is %lu\n", num, result);
+    //printf("Fibonacci of %lu is %lu\n", num, result);
   }
 
    //exit(res);

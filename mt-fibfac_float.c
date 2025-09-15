@@ -10,20 +10,11 @@
 // EDIT THIS
 
 static size_t n_cores = 2;
-static size_t num = 20;
+static float num = 100;
 
-
-double factorial_rec(int n) {
-   //base case
-   if(n == 0) {
-      return 1;
-   } else {
-      return n * factorial_rec(n-1);
-   }
-}
 
 #pragma GCC optimize ("unroll-loops")
-double factorial_it(int n) {
+float factorial_it(float n) {
   double result = 1;
   for(double i = 1; i <= n; i++){
     result = result * i;
@@ -32,22 +23,12 @@ double factorial_it(int n) {
 }
 
 
-double fibbonacci_rec(int n) {
-   if(n == 0){
-      return 0;
-   } else if(n == 1) {
-      return 1;
-   } else {
-      return (fibbonacci_rec(n-1) + fibbonacci_rec(n-2));
-   }
-}
-
 #pragma GCC optimize ("unroll-loops")
-double fibbonacci_it (int n)
+float fibbonacci_it (float n)
 {
-  double last = 1;   /* Initial value is fib (1).  */
-  double prev = 0;   /* Initial value controls fib (2).  */
-  int i;
+  float last = 1;   /* Initial value is fib (1).  */
+  float prev = 0;   /* Initial value controls fib (2).  */
+  float i;
 
   for (i = 1; i < n; ++i)
     /* If n is 1 or less, the loop runs zero times,  */
@@ -70,30 +51,7 @@ double fibbonacci_it (int n)
 }
 
 
-void thread_entry_rec(int cid, int nc, double* fib, double* fac)
-{
-
-  assert(fib);
-  assert(fac);
-
-  if(nc == 1){
-    *fib = fibbonacci_rec(num);
-    *fac = factorial_rec(num);
-  }
-  else{
-    if(cid == 0){
-      *fib = fibbonacci_rec(num);
-      *fac = 0;
-    }
-    else{
-      *fib = 0;
-      *fac = factorial_rec(num);
-    }
-  }
-
-}
-
-void thread_entry_it(int cid, int nc, double* fib, double* fac)
+void thread_entry(int cid, int nc, float* fib, float* fac)
 {
 
   assert(fib);
@@ -128,8 +86,8 @@ void __main(void) {
 
 
   const char* march = get_march(read_csr(marchid));
-  double fib;
-  double fac;
+  float fib;
+  float fac;
 
   for (size_t i = 0; i < n_cores; i++) {
     barrier(nc);
@@ -141,7 +99,7 @@ void __main(void) {
 
   start_time = read_csr(mcycle);
   start_instr = read_csr(minstret);
-  thread_entry_rec(cid, nc, &fib, &fac);
+  thread_entry(cid, nc, &fib, &fac);
   
   end_time = read_csr(mcycle);
   end_instr = read_csr(minstret);
@@ -157,23 +115,6 @@ void __main(void) {
     barrier(nc);
   }
 
-  start_time = read_csr(mcycle);
-  start_instr = read_csr(minstret);
-  thread_entry_it(cid, nc, &fib, &fac);
-  
-  end_time = read_csr(mcycle);
-  end_instr = read_csr(minstret);
-
-  total_time = end_time - start_time;
-  total_instr = end_instr - start_instr;
-  //int res = verify(ARRAY_SIZE, results_data, verify_data);
-  for (size_t i = 0; i < n_cores; i++) {
-    barrier(nc);
-    if (mhartid == i) {
-      printf("hart = %lu , total time it = %lu , total instr = %lu\n", cid, total_time, total_instr);
-    }
-    barrier(nc);
-  }
 
 
 

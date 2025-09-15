@@ -87,6 +87,7 @@ add_executable(mt-hello mt-hello.c)
 add_executable(mt-matmul mt-matmul.c)
 add_executable(mt-fibonacci mt-fibonacci.c)
 add_executable(mt-fibfac mt-fibfac.c)
+add_executable(mt-fibfac_float mt-fibfac_float.c)
 add_executable(symmetric symmetric.c)
 
 #################################
@@ -128,6 +129,7 @@ add_dump_target(mt-hello)
 add_dump_target(mt-matmul)
 add_dump_target(mt-fibonacci)
 add_dump_target(mt-fibfac)
+add_dump_target(mt-fibfac_float)
 add_dump_target(symmetric)
 
 
